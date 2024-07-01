@@ -3,7 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <mbedtls/base64.h>
 #include <RPC/message_common.h>
-#include <gcem.hpp>
+
 #include <typeindex>
 
 constexpr int MOUSE_WHEEL_EVENT_BASE64_LEN = (sizeof(mouse_wheel_event_t) + 2) / 3 * 4;
