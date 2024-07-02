@@ -66,6 +66,8 @@ public:
 		return IsNTShared() ||
 			Texture2DDesc.MiscFlags & D3D11_RESOURCE_MISC_SHARED;
 	}
+	bool AcquireSync(uint64_t Key, DWORD dwMilliseconds = INFINITE)noexcept(false) override;
+	bool ReleaseSync(uint64_t Key)noexcept(false) override;
 	D3D11_TEXTURE2D_DESC Texture2DDesc{};
 	ComPtr<ID3D11Texture2D> Texture;
 	ComPtr<ID3D11ShaderResourceView> ShaderRes;
@@ -80,8 +82,7 @@ public:
 	std::vector<D3D11_SUBRESOURCE_DATA> SRD;
 private:
 
-	bool AcquireSync(uint64_t Key, DWORD dwMilliseconds = INFINITE)noexcept(false);
-	bool ReleaseSync(uint64_t Key)noexcept(false);
+
 	void InitResourceView() noexcept(false);
 	void InitTexture(EGraphicSubsystemColorFormat colorFormat, TextureFlag_t& Flags, const uint8_t* const* data) noexcept(false);
 	void InitRenderTargets()noexcept(false);

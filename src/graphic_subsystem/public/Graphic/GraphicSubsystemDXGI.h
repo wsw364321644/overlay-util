@@ -20,6 +20,8 @@ public:
 	virtual uint64_t GetSharedHandle() const {
 		return (uint64_t)SharedHandle;
 	};
+	virtual bool AcquireSync(uint64_t Key, DWORD dwMilliseconds = INFINITE)noexcept(false)=0;
+	virtual bool ReleaseSync(uint64_t Key)noexcept(false)=0;
 	DXGI_FORMAT DXGIFormatResource{ DXGI_FORMAT_UNKNOWN };
 	DXGI_FORMAT DXGIFormatView{ DXGI_FORMAT_UNKNOWN };
 	DXGI_FORMAT DXGIFormatViewLinear{ DXGI_FORMAT_UNKNOWN };
