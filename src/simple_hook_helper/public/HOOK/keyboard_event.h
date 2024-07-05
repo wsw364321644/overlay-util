@@ -16,6 +16,6 @@ typedef enum EPressedState
 typedef struct keyboard_event_t
 {
     EPressedState state:1;
-    SDL_Keycode key_code:32;
+    SDL_Keycode key_code;
 } keyboard_event_t;
 
