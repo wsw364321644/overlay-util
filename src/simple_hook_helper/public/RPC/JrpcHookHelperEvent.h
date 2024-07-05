@@ -5,6 +5,7 @@
 #include "RpcHookHelperEventInterface.h"
 #include "HOOK/keyboard_event.h"
 #include "HOOK/mouse_event.h"
+#include "HOOK/window_event.h"
 #include "HOOK/hotkey_list.h"
 #include "std_ext.h"
 #include <any>
@@ -54,6 +55,6 @@ public:
     DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayMouseButtonEvent, uint64_t, mouse_button_event_t&);
     DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayMouseMotionEvent, uint64_t, mouse_motion_event_t&);
     DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayKeyboardEvent, uint64_t, keyboard_event_t&);
-
+    DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayWindowEvent, uint64_t, window_event_t&);
 };
 #pragma warning(pop)

@@ -6,6 +6,12 @@
 #include <stdbool.h>
 #include "simple_hook_helper_common.h"
 #include "keyboard_event.h"
+enum EMouseButtonType
+{
+    Left=SDL_BUTTON_LEFT,
+    Right=SDL_BUTTON_RIGHT,
+    Middle=SDL_BUTTON_MIDDLE,
+};
 typedef struct mouse_motion_event_t
 {
     int32_t x;
@@ -17,7 +23,7 @@ typedef struct mouse_motion_event_t
 typedef struct mouse_button_event_t
 {
     EPressedState state:1;
-    uint8_t button;
+    EMouseButtonType button:8;
     uint8_t clicks;
     int32_t x;
     int32_t y;
