@@ -281,13 +281,13 @@ public:
 //
 //	void (*gs_swapchain_destroy)(gs_swapchain_t* swapchain);
 //
-//	void (*gs_texture_destroy)(gs_texture_t* tex);
+	virtual void TextureDestroy(FGraphicSubsystemTexture* tex)=0;
 //	uint32_t(*gs_texture_get_width)(const gs_texture_t* tex);
 //	uint32_t(*gs_texture_get_height)(const gs_texture_t* tex);
 //	enum gs_color_format(*gs_texture_get_color_format)(
 //		const gs_texture_t* tex);
-virtual bool TextureMap(FGraphicSubsystemTexture* tex, uint8_t** ptr, uint32_t* linesize) = 0;
-virtual bool TextureUnmap(FGraphicSubsystemTexture* tex) = 0;
+	virtual bool TextureMap(FGraphicSubsystemTexture* tex, uint8_t** ptr, uint32_t* linesize) = 0;
+	virtual bool TextureUnmap(FGraphicSubsystemTexture* tex) = 0;
 
 //	bool (*gs_texture_is_rect)(const gs_texture_t* tex);
 //	void* (*gs_texture_get_obj)(const gs_texture_t* tex);

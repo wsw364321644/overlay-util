@@ -641,6 +641,11 @@ void FGraphicSubsystemDX11::DeviceCopyTextureRegion(FGraphicSubsystemDevice* dev
 	}
 }
 
+void FGraphicSubsystemDX11::TextureDestroy(FGraphicSubsystemTexture* tex)
+{
+	delete tex;
+}
+
 bool FGraphicSubsystemDX11::TextureMap(FGraphicSubsystemTexture* _tex, uint8_t** ptr, uint32_t* linesize)
 {
 	auto tex2d = dynamic_cast<FGraphicSubsystemDX11Texture2D*>(_tex);

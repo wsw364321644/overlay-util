@@ -62,7 +62,6 @@ void JRPCHookHelperAPI::OnConnectToHostResponseRecv(std::shared_ptr<RPCResponse>
         TriggerConnectToHostSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
     }
     else {
-        auto doc = GetResultNlohmannJson(*resp);
         TriggerConnectToHostSendDelegate(id);
     }
     RemoveConnectToHostSendDelagate(id);
@@ -117,7 +116,6 @@ void JRPCHookHelperAPI::OnAddWindowResponseRecv(std::shared_ptr<RPCResponse>resp
         TriggerAddWindowSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
     }
     else {
-        auto doc = GetResultNlohmannJson(*resp);
         TriggerAddWindowSendDelegate(id);
     }
     RemoveAddWindowSendDelagate(id);
@@ -173,7 +171,6 @@ void JRPCHookHelperAPI::OnRemoveWindowResponseRecv(std::shared_ptr<RPCResponse>r
         TriggerRemoveWindowSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
     }
     else {
-        auto doc = GetResultNlohmannJson(*resp);
         TriggerRemoveWindowSendDelegate(id);
     }
     RemoveRemoveWindowSendDelagate(id);

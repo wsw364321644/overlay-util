@@ -13,6 +13,7 @@ class FGraphicSubsystemDX11 :public FGraphicSubsystemDXGI {
 		enum EGraphicSubsystemColorFormat color_format, uint32_t levels,const uint8_t** data, TextureFlag_t flags)override;
 	void DeviceCopyTextureRegion(FGraphicSubsystemDevice* device, FGraphicSubsystemTexture* dst, uint32_t dst_x, uint32_t dst_y,
 		FGraphicSubsystemTexture* src, uint32_t src_x, uint32_t src_y, uint32_t src_w, uint32_t src_h)override;
+	void TextureDestroy(FGraphicSubsystemTexture* tex) override;
 	bool TextureMap(FGraphicSubsystemTexture* tex, uint8_t** ptr, uint32_t* linesize) override;
 	bool TextureUnmap(FGraphicSubsystemTexture* tex) override;
 
