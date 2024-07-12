@@ -19,3 +19,4 @@ typedef struct keyboard_event_t
     SDL_Keycode key_code;
 } keyboard_event_t;
 
+HOOK_HELPER_API const char* SDLKeycodeToString(SDL_Keycode code);
