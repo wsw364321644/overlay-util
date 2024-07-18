@@ -100,8 +100,8 @@ void JRPCHookHelperAPI::OnAddWindowRequestRecv(std::shared_ptr<RPCRequest> req)
 {
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto doc = GetParamsNlohmannJson(*jreq);
-
-    RecvAddWindowDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>(), doc["sharedMemName"].get_ref<nlohmann::json::string_t&>().c_str());
+    if (RecvAddWindowDelegate)
+        RecvAddWindowDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>(), doc["sharedMemName"].get_ref<nlohmann::json::string_t&>().c_str());
 }
 
 void JRPCHookHelperAPI::OnAddWindowResponseRecv(std::shared_ptr<RPCResponse>resp, std::shared_ptr<RPCRequest>req)
@@ -155,8 +155,8 @@ void JRPCHookHelperAPI::OnRemoveWindowRequestRecv(std::shared_ptr<RPCRequest> re
 {
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto doc = GetParamsNlohmannJson(*jreq);
-
-    RecvRemoveWindowDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>());
+    if(RecvRemoveWindowDelegate)
+        RecvRemoveWindowDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>());
 }
 
 void JRPCHookHelperAPI::OnRemoveWindowResponseRecv(std::shared_ptr<RPCResponse>resp, std::shared_ptr<RPCRequest>req)
