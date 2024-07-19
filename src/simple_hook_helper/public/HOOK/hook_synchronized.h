@@ -16,6 +16,7 @@
 #define EVENT_HOOK_INIT "CaptureHook_Initialize"
 
 #define WINDOW_HOOK_KEEPALIVE "CaptureHook_KeepAlive"
+#define HOOK_READY_KEEPALIVE "CaptureHook_HookReady_KeepAlive"
 
 HOOK_HELPER_API HANDLE create_mutex_plus_id(const char* name, DWORD id, BOOL is_app);
 HOOK_HELPER_API HANDLE open_mutex_plus_id(const char* name, DWORD id, BOOL is_app);
