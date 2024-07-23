@@ -15,6 +15,8 @@ typedef struct hook_window_info_t {
 	uint16_t max_width{ 0 };
 	uint16_t min_height{ 0 };
 	uint16_t min_width{ 0 };
+	uint16_t render_height{ 0 };
+	uint16_t render_width{ 0 };
 	uint16_t height{ 0 };
 	uint16_t width{ 0 };
 	uint16_t x{ 0 };
