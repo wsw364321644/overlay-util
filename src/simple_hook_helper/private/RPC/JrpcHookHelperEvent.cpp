@@ -74,15 +74,47 @@ void JRPCHookHelperEventAPI::OnHotkeyListUpdateRequestRecv(std::shared_ptr<RPCRe
     RecvHotkeyListUpdateDelegate(HotKeyList);
 }
 
+REGISTER_RPC_EVENT_API_AUTO(JRPCHookHelperEventAPI, InputStateUpdate);
+DEFINE_REQUEST_RPC_EVENT(JRPCHookHelperEventAPI, InputStateUpdate);
+bool JRPCHookHelperEventAPI::InputStateUpdate(overlay_ime_event_t& imeEvent)
+{
+    std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
+    req->SetMethod(InputStateUpdateName);
+    nlohmann::json obj = nlohmann::json::object();
+    obj["want_visible"] = imeEvent.want_visible;
+    obj["input_pos_x"] = imeEvent.input_pos_x;
+    obj["input_pos_y"] = imeEvent.input_pos_y;
+    obj["input_line_height"] = imeEvent.input_line_height;
+
+    req->SetParams(obj.dump());
+    return  processer->SendEvent(req);
+}
+
+void JRPCHookHelperEventAPI::OnInputStateUpdateRequestRecv(std::shared_ptr<RPCRequest> req)
+{
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
+    auto doc = GetParamsNlohmannJson(*jreq);
+    HotKeyList_t HotKeyList;
+    if (!RecvInputStateUpdateDelegate) {
+        return;
+    }
+    overlay_ime_event_t imeEvent;
+    imeEvent.input_line_height = doc.get_ref<nlohmann::json::number_unsigned_t&>();
+    imeEvent.input_pos_x = doc.get_ref<nlohmann::json::number_unsigned_t&>();
+    imeEvent.input_pos_y = doc.get_ref<nlohmann::json::number_unsigned_t&>();
+    imeEvent.want_visible = doc.get_ref<nlohmann::json::boolean_t&>();
+    RecvInputStateUpdateDelegate(imeEvent);
+}
+
 REGISTER_RPC_EVENT_API_AUTO(JRPCHookHelperEventAPI, ClientSizeUpdate);
 DEFINE_REQUEST_RPC_EVENT(JRPCHookHelperEventAPI, ClientSizeUpdate);
-bool JRPCHookHelperEventAPI::ClientSizeUpdate(uint16_t width, uint16_t height)
+bool JRPCHookHelperEventAPI::ClientSizeUpdate(window_resize_event_t& size)
 {
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(ClientSizeUpdateName);
     nlohmann::json obj = nlohmann::json::object();
-    obj["width"] = width;
-    obj["height"] = height;
+    obj["width"] = size.width;
+    obj["height"] = size.height;
     req->SetParams(obj.dump());
     return  processer->SendEvent(req);
 }
@@ -94,8 +126,11 @@ void JRPCHookHelperEventAPI::OnClientSizeUpdateRequestRecv(std::shared_ptr<RPCRe
         return;
     }
     auto doc = GetParamsNlohmannJson(*jreq);
-    RecvClientSizeUpdateDelegate(doc["width"].get_ref<nlohmann::json::number_integer_t&>(),
-        doc["height"].get_ref<nlohmann::json::number_integer_t&>());
+    window_resize_event_t revent;
+    revent.width = doc["width"].get_ref<nlohmann::json::number_integer_t&>();
+    revent.height = doc["height"].get_ref<nlohmann::json::number_integer_t&>();
+
+    RecvClientSizeUpdateDelegate(revent);
 }
 
 
