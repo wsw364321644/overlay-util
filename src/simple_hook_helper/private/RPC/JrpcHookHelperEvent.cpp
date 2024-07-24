@@ -298,6 +298,35 @@ void JRPCHookHelperEventAPI::OnOverlayKeyboardEventRequestRecv(std::shared_ptr<R
 }
 
 
+REGISTER_RPC_EVENT_API_AUTO(JRPCHookHelperEventAPI, OverlayCharEvent);
+DEFINE_REQUEST_RPC_EVENT(JRPCHookHelperEventAPI, OverlayCharEvent);
+bool JRPCHookHelperEventAPI::OverlayCharEvent(uint64_t windowId, overlay_char_event_t& e)
+{
+    std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
+    req->SetMethod(OverlayCharEventName);
+    nlohmann::json obj = nlohmann::json::object();
+    obj["str"] = std::string_view(e.char_buf,e.num);
+
+    req->SetParams(obj.dump());
+    return  processer->SendEvent(req);
+}
+
+void JRPCHookHelperEventAPI::OnOverlayCharEventRequestRecv(std::shared_ptr<RPCRequest> req)
+{
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
+    auto doc = GetParamsNlohmannJson(*jreq);
+    if (!RecvOverlayCharEventDelegate) {
+        return;
+    }
+    overlay_char_event_t outEvent;
+    ;
+    outEvent.char_buf = doc["str"].get_ref<nlohmann::json::string_t&>().c_str();
+    outEvent.num = doc["str"].get_ref<nlohmann::json::string_t&>().size();
+
+    RecvOverlayCharEventDelegate(doc["windowId"].get_ref<nlohmann::json::number_integer_t&>(), outEvent);
+}
+
+
 REGISTER_RPC_EVENT_API_AUTO(JRPCHookHelperEventAPI, OverlayWindowEvent);
 DEFINE_REQUEST_RPC_EVENT(JRPCHookHelperEventAPI, OverlayWindowEvent);
 bool JRPCHookHelperEventAPI::OverlayWindowEvent(uint64_t windowId, window_event_t& event)

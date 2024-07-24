@@ -56,6 +56,7 @@ public:
     DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayMouseButtonEvent, uint64_t, mouse_button_event_t&);
     DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayMouseMotionEvent, uint64_t, mouse_motion_event_t&);
     DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayKeyboardEvent, uint64_t, keyboard_event_t&);
+    DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayCharEvent, uint64_t, overlay_char_event_t&);
     DECLARE_REQUEST_RPC_EVENT_TWO_PARAM(OverlayWindowEvent, uint64_t, window_event_t&);
 };
 #pragma warning(pop)
