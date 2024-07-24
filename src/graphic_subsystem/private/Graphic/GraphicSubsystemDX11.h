@@ -14,7 +14,7 @@ class FGraphicSubsystemDX11 :public FGraphicSubsystemDXGI {
 	void DeviceCopyTextureRegion(FGraphicSubsystemDevice* device, FGraphicSubsystemTexture* dst, uint32_t dst_x, uint32_t dst_y,
 		FGraphicSubsystemTexture* src, uint32_t src_x, uint32_t src_y, uint32_t src_w, uint32_t src_h)override;
 	void TextureDestroy(FGraphicSubsystemTexture* tex) override;
-	bool TextureMap(FGraphicSubsystemTexture* tex, uint8_t** ptr, uint32_t* linesize) override;
+	bool TextureMap(FGraphicSubsystemTexture* tex, uint8_t** ptr, uint32_t* RowPitch) override;
 	bool TextureUnmap(FGraphicSubsystemTexture* tex) override;
 
 	FGraphicSubsystemTexture* DeviceTextureOpenShared(FGraphicSubsystemDevice* device, uint32_t handle) override;

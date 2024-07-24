@@ -646,7 +646,7 @@ void FGraphicSubsystemDX11::TextureDestroy(FGraphicSubsystemTexture* tex)
 	delete tex;
 }
 
-bool FGraphicSubsystemDX11::TextureMap(FGraphicSubsystemTexture* _tex, uint8_t** ptr, uint32_t* linesize)
+bool FGraphicSubsystemDX11::TextureMap(FGraphicSubsystemTexture* _tex, uint8_t** ptr, uint32_t* RowPitch)
 {
 	auto tex2d = dynamic_cast<FGraphicSubsystemDX11Texture2D*>(_tex);
 	HRESULT hr;
@@ -661,7 +661,7 @@ bool FGraphicSubsystemDX11::TextureMap(FGraphicSubsystemTexture* _tex, uint8_t**
 		return false;
 
 	*ptr = (uint8_t*)map.pData;
-	*linesize = map.RowPitch;
+	*RowPitch = map.RowPitch;
 	return true;
 }
 
