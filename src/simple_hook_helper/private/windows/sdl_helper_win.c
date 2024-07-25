@@ -231,56 +231,86 @@ SDL_Scancode WindowsScanCodeToSDLScanCode(LPARAM lParam, WPARAM wParam)
     return code;
 }
 
-static bool WindowsCheckModifierLRSub(Uint16 mod, SDL_Keymod lmodekey, SDL_Keymod rmodekey, uint32_t lvkcode, uint32_t rvkcode, GetKeyState_t fn) {
+static bool WindowsCheckModifierLRSub(Uint16 mod, SDL_Keymod lmodekey, SDL_Keymod rmodekey, uint32_t lvkcode, uint32_t rvkcode) {
     if (mod & lmodekey) {
         if (mod & rmodekey) {
-            if (!(fn(lvkcode) & 0x8000)&& !(fn(rvkcode) & 0x8000)) {
+            if (!(GetKeyState(lvkcode) & 0x8000)&& !(GetKeyState(rvkcode) & 0x8000)) {
                 return false;
             }
         }
         else {
-            if (!(fn(lvkcode) & 0x8000)) {
+            if (!(GetKeyState(lvkcode) & 0x8000)) {
                 return false;
             }
         }
     }else if (mod & rmodekey) {
-        if (!(fn(rvkcode) & 0x8000)) {
+        if (!(GetKeyState(rvkcode) & 0x8000)) {
             return false;
         }
     }
     return true;
 }
-bool WindowsCheckModifier(Uint16 mod, GetKeyState_t fn)
-{
-    if (fn == NULL) {
-        fn = GetKeyState;
-    }
-    if (!WindowsCheckModifierLRSub(mod,KMOD_LSHIFT, KMOD_RSHIFT,  VK_LSHIFT, VK_RSHIFT, fn)) {
-       return false;
-    }
-    if (!WindowsCheckModifierLRSub(mod, KMOD_LCTRL, KMOD_RCTRL,  VK_LCONTROL, VK_RCONTROL, fn)) {
+bool WindowsCheckModifier(Uint16 mod) {
+    if (!WindowsCheckModifierLRSub(mod, KMOD_LSHIFT, KMOD_RSHIFT, VK_LSHIFT, VK_RSHIFT)) {
         return false;
     }
-    if (!WindowsCheckModifierLRSub(mod, KMOD_LALT, KMOD_RALT,  VK_LMENU, VK_RMENU, fn)) {
+    if (!WindowsCheckModifierLRSub(mod, KMOD_LCTRL, KMOD_RCTRL, VK_LCONTROL, VK_RCONTROL)) {
         return false;
     }
-    if (!WindowsCheckModifierLRSub(mod, KMOD_LGUI, KMOD_RGUI,  VK_LWIN, VK_RWIN, fn)) {
+    if (!WindowsCheckModifierLRSub(mod, KMOD_LALT, KMOD_RALT, VK_LMENU, VK_RMENU)) {
+        return false;
+    }
+    if (!WindowsCheckModifierLRSub(mod, KMOD_LGUI, KMOD_RGUI, VK_LWIN, VK_RWIN)) {
         return false;
     }
     if (mod & KMOD_NUM) {
-        if (!(fn(VK_NUMLOCK) & 0x0001)) {
+        if (!(GetKeyState(VK_NUMLOCK) & 0x0001)) {
             return false;
         }
     }
     if (mod & KMOD_CAPS) {
-        if (!(fn(VK_CAPITAL) & 0x0001)) {
+        if (!(GetKeyState(VK_CAPITAL) & 0x0001)) {
             return false;
         }
     }
     if (mod & KMOD_SCROLL) {
-        if (!(fn(VK_SCROLL) & 0x0001)) {
+        if (!(GetKeyState(VK_SCROLL) & 0x0001)) {
             return false;
         }
     }
     return true;
 }
+//bool WindowsCheckModifier(Uint16 mod, GetKeyState_t fn)
+//{
+//    if (fn == NULL) {
+//        fn = GetKeyState;
+//    }
+//    if (!WindowsCheckModifierLRSub(mod,KMOD_LSHIFT, KMOD_RSHIFT,  VK_LSHIFT, VK_RSHIFT, fn)) {
+//       return false;
+//    }
+//    if (!WindowsCheckModifierLRSub(mod, KMOD_LCTRL, KMOD_RCTRL,  VK_LCONTROL, VK_RCONTROL, fn)) {
+//        return false;
+//    }
+//    if (!WindowsCheckModifierLRSub(mod, KMOD_LALT, KMOD_RALT,  VK_LMENU, VK_RMENU, fn)) {
+//        return false;
+//    }
+//    if (!WindowsCheckModifierLRSub(mod, KMOD_LGUI, KMOD_RGUI,  VK_LWIN, VK_RWIN, fn)) {
+//        return false;
+//    }
+//    if (mod & KMOD_NUM) {
+//        if (!(fn(VK_NUMLOCK) & 0x0001)) {
+//            return false;
+//        }
+//    }
+//    if (mod & KMOD_CAPS) {
+//        if (!(fn(VK_CAPITAL) & 0x0001)) {
+//            return false;
+//        }
+//    }
+//    if (mod & KMOD_SCROLL) {
+//        if (!(fn(VK_SCROLL) & 0x0001)) {
+//            return false;
+//        }
+//    }
+//    return true;
+//}
