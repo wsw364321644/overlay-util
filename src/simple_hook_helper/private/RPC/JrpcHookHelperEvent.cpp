@@ -306,7 +306,7 @@ bool JRPCHookHelperEventAPI::OverlayCharEvent(uint64_t windowId, overlay_char_ev
     req->SetMethod(OverlayCharEventName);
     nlohmann::json obj = nlohmann::json::object();
     obj["str"] = std::string_view(e.char_buf,e.num);
-
+    obj["windowId"] = windowId;
     req->SetParams(obj.dump());
     return  processer->SendEvent(req);
 }
