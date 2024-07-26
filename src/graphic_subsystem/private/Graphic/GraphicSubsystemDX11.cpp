@@ -53,6 +53,7 @@ public:
 	FGraphicSubsystemDX11Texture2D(FGraphicSubsystemDX11Device* device, uint64_t handle, bool ntHandle = false);
 	FGraphicSubsystemDX11Texture2D(FGraphicSubsystemDX11Device* device, uint32_t width, uint32_t height,
 		EGraphicSubsystemColorFormat color_format, uint32_t levels, const uint8_t** data, TextureFlag_t flags, EGraphicSubsystemTextureType type);
+	~FGraphicSubsystemDX11Texture2D() override;
 	FGraphicSubsystemDX11Device* GetDX11Device();
 	uint32_t GetWidth()const  override { return Texture2DDesc.Width; }
 	uint32_t GetHeight()const override { return Texture2DDesc.Height; }
@@ -265,6 +266,13 @@ FGraphicSubsystemDX11Texture2D::FGraphicSubsystemDX11Texture2D(FGraphicSubsystem
 	InitResourceView();
 	if (flags.test(ETextureFlag::BIND_RENDER_TARGET)) {
 		InitRenderTargets();
+	}
+}
+
+FGraphicSubsystemDX11Texture2D::~FGraphicSubsystemDX11Texture2D()
+{
+	if (SharedHandle&& IsNTShared()) {
+		CloseHandle(SharedHandle);
 	}
 }
 
