@@ -175,3 +175,57 @@ void JRPCHookHelperAPI::OnRemoveWindowResponseRecv(std::shared_ptr<RPCResponse>r
     }
     RemoveRemoveWindowSendDelagate(id);
 }
+
+
+REGISTER_RPC_API_AUTO(JRPCHookHelperAPI, UpdateWindowTexture);
+DEFINE_REQUEST_RPC(JRPCHookHelperAPI, UpdateWindowTexture);
+RPCHandle_t JRPCHookHelperAPI::UpdateWindowTexture(uint64_t windowID, TUpdateWindowTextureDelegate inDelegate, TRPCErrorDelegate errDelegate)
+{
+    std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
+    req->SetMethod(UpdateWindowTextureName);
+
+    nlohmann::json obj = nlohmann::json::object();
+    obj["windowID"] = windowID;
+    req->SetParams(obj.dump());
+
+    auto handle = processer->SendRequest(req);
+    if (handle.IsValid()) {
+        AddUpdateWindowTextureSendDelagate(req->GetID(), inDelegate, errDelegate);
+    }
+    return handle;
+}
+
+bool JRPCHookHelperAPI::RespondUpdateWindowTexture(RPCHandle_t handle)
+{
+    std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
+    response->OptError = false;
+
+    nlohmann::json doc = nlohmann::json();
+    response->Result = doc.dump();
+    return processer->SendResponse(handle, response);
+}
+
+void JRPCHookHelperAPI::OnUpdateWindowTextureRequestRecv(std::shared_ptr<RPCRequest> req)
+{
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
+    auto doc = GetParamsNlohmannJson(*jreq);
+    if (RecvUpdateWindowTextureDelegate)
+        RecvUpdateWindowTextureDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>());
+}
+
+void JRPCHookHelperAPI::OnUpdateWindowTextureResponseRecv(std::shared_ptr<RPCResponse>resp, std::shared_ptr<RPCRequest>req)
+{
+    auto id = req->GetID();
+    if (!HasUpdateWindowTextureSendDelagate(id)) {
+        return;
+    }
+    std::shared_ptr<JsonRPCResponse> jresp = std::dynamic_pointer_cast<JsonRPCResponse>(resp);
+
+    if (jresp->IsError()) {
+        TriggerUpdateWindowTextureSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
+    }
+    else {
+        TriggerUpdateWindowTextureSendDelegate(id);
+    }
+    RemoveUpdateWindowTextureSendDelagate(id);
+}

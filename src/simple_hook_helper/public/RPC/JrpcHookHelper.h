@@ -16,6 +16,8 @@ public:
     DECLARE_REQUEST_RPC_TWO_PARAM(AddWindow, uint64_t, const char*);
     DECLARE_RESPONSE_RPC(RemoveWindow);
     DECLARE_REQUEST_RPC_ONE_PARAM(RemoveWindow, uint64_t);
+    DECLARE_RESPONSE_RPC(UpdateWindowTexture);
+    DECLARE_REQUEST_RPC_ONE_PARAM(UpdateWindowTexture, uint64_t);
 
 private:
 
