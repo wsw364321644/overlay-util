@@ -35,10 +35,10 @@ RPCHandle_t JRPCHookHelperAPI::ConnectToHost(uint64_t processId, const char* com
 bool JRPCHookHelperAPI::RespondConnectToHost(RPCHandle_t handle)
 {
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
-    response->OptError = false;
+    response->SetError(false);
 
     nlohmann::json doc = nlohmann::json();
-    response->Result = doc.dump();
+    response->SetResult(doc.dump());
     return processer->SendResponse(handle, response);
 }
 
@@ -59,7 +59,7 @@ void JRPCHookHelperAPI::OnConnectToHostResponseRecv(std::shared_ptr<RPCResponse>
     std::shared_ptr<JsonRPCResponse> jresp = std::dynamic_pointer_cast<JsonRPCResponse>(resp);
 
     if (jresp->IsError()) {
-        TriggerConnectToHostSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
+        TriggerConnectToHostSendErrorDelegate(id, resp->ErrorCode, resp->GetErrorMsg().data(), resp->GetErrorData().data());
     }
     else {
         TriggerConnectToHostSendDelegate(id);
@@ -89,10 +89,10 @@ RPCHandle_t JRPCHookHelperAPI::AddWindow(uint64_t windowID, const char* sharedMe
 bool JRPCHookHelperAPI::RespondAddWindow(RPCHandle_t handle)
 {
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
-    response->OptError = false;
+    response->SetError(false);
 
     nlohmann::json doc = nlohmann::json();
-    response->Result = doc.dump();
+    response->SetResult(doc.dump());
     return processer->SendResponse(handle, response);
 }
 
@@ -113,7 +113,7 @@ void JRPCHookHelperAPI::OnAddWindowResponseRecv(std::shared_ptr<RPCResponse>resp
     std::shared_ptr<JsonRPCResponse> jresp = std::dynamic_pointer_cast<JsonRPCResponse>(resp);
 
     if (jresp->IsError()) {
-        TriggerAddWindowSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
+        TriggerAddWindowSendErrorDelegate(id, resp->ErrorCode, resp->GetErrorMsg().data(), resp->GetErrorData().data());
     }
     else {
         TriggerAddWindowSendDelegate(id);
@@ -144,10 +144,10 @@ RPCHandle_t JRPCHookHelperAPI::RemoveWindow(uint64_t windowID,TRemoveWindowDeleg
 bool JRPCHookHelperAPI::RespondRemoveWindow(RPCHandle_t handle)
 {
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
-    response->OptError = false;
+    response->SetError(false);
 
     nlohmann::json doc = nlohmann::json();
-    response->Result = doc.dump();
+    response->SetResult(doc.dump());
     return processer->SendResponse(handle, response);
 }
 
@@ -168,7 +168,7 @@ void JRPCHookHelperAPI::OnRemoveWindowResponseRecv(std::shared_ptr<RPCResponse>r
     std::shared_ptr<JsonRPCResponse> jresp = std::dynamic_pointer_cast<JsonRPCResponse>(resp);
 
     if (jresp->IsError()) {
-        TriggerRemoveWindowSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
+        TriggerRemoveWindowSendErrorDelegate(id, resp->ErrorCode, resp->GetErrorMsg().data(), resp->GetErrorData().data());
     }
     else {
         TriggerRemoveWindowSendDelegate(id);
@@ -198,10 +198,10 @@ RPCHandle_t JRPCHookHelperAPI::UpdateWindowTexture(uint64_t windowID, TUpdateWin
 bool JRPCHookHelperAPI::RespondUpdateWindowTexture(RPCHandle_t handle)
 {
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
-    response->OptError = false;
+    response->SetError(false);
 
     nlohmann::json doc = nlohmann::json();
-    response->Result = doc.dump();
+    response->SetResult(doc.dump());
     return processer->SendResponse(handle, response);
 }
 
@@ -222,7 +222,7 @@ void JRPCHookHelperAPI::OnUpdateWindowTextureResponseRecv(std::shared_ptr<RPCRes
     std::shared_ptr<JsonRPCResponse> jresp = std::dynamic_pointer_cast<JsonRPCResponse>(resp);
 
     if (jresp->IsError()) {
-        TriggerUpdateWindowTextureSendErrorDelegate(id, resp->ErrorCode, resp->ErrorMsg.c_str(), resp->ErrorData.c_str());
+        TriggerUpdateWindowTextureSendErrorDelegate(id, resp->ErrorCode, resp->GetErrorMsg().data(), resp->GetErrorData().data());
     }
     else {
         TriggerUpdateWindowTextureSendDelegate(id);
