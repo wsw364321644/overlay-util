@@ -163,7 +163,7 @@ void FGraphicSubsystemDX11Device::InitDevice()
 #endif
 
 	adapterName = (Adapter->GetDesc(&desc) == S_OK) ? desc.Description: L"<unknown>";
-	auto adapterNameu8=U16ToU8((const char16_t*)adapterName.c_str());
+	auto adapterNameu8=U16ToU8(adapterName.c_str(), adapterName.size());
 	SIMPLELOG_LOGGER_INFO(nullptr, "Loading up D3D11 on adapter {} ({})", adapterNameu8, AdpIdx);
 
 

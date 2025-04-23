@@ -281,7 +281,7 @@ static inline void LogAdapterMonitors(IDXGIAdapter1* adapter)
 
 		const RECT& rect = desc.DesktopCoordinates;
 		const ULONG nits = GetSdrWhiteNits(desc.Monitor);
-		auto monitorFriendlyDeviceNameu8 = U16ToU8((const char16_t*)target.monitorFriendlyDeviceName);
+		auto monitorFriendlyDeviceNameu8 = U16ToU8(target.monitorFriendlyDeviceName,GetStringLengthW(target.monitorFriendlyDeviceName));
 		SIMPLELOG_LOGGER_INFO(nullptr,
 			"\t  output {}:\n"
 			"\t    name={}\n"
@@ -323,7 +323,7 @@ void LogD3DAdapters()
 		if (desc.VendorId == 0x1414 && desc.DeviceId == 0x8c)
 			continue;
 
-		auto str = U16ToU8((const char16_t*)desc.Description);
+		auto str = U16ToU8(desc.Description,GetStringLengthW(desc.Description));
 		SIMPLELOG_LOGGER_INFO(nullptr, "Adapter {}: {}", i, str.c_str());
 		SIMPLELOG_LOGGER_INFO(nullptr, "Dedicated VRAM:  {}", desc.DedicatedVideoMemory);
 		SIMPLELOG_LOGGER_INFO(nullptr, "Shared VRAM:   {}", desc.SharedSystemMemory);
@@ -374,7 +374,7 @@ static inline void EnumD3DAdapters(bool (*callback)(void*, const char*, uint32_t
 		if (desc.VendorId == 0x1414 && desc.DeviceId == 0x8c)
 			continue;
 
-		auto str = U16ToU8((const char16_t*)desc.Description);
+		auto str = U16ToU8(desc.Description,GetStringLengthW(desc.Description));
 
 		if (!callback(param, str.c_str(), i))
 			break;

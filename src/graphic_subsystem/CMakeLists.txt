@@ -1,9 +1,10 @@
-NewTargetSource()
 
-list(APPEND SourceFiles
-    ${CMAKE_CURRENT_SOURCE_DIR}/private/Graphic/GraphicSubsystem.cpp
+list(APPEND PublicFiles
     ${CMAKE_CURRENT_SOURCE_DIR}/public/Graphic/GraphicSubsystem.h
     ${CMAKE_CURRENT_SOURCE_DIR}/public/graphic_subsystem_exports.h
+)
+list(APPEND SourceFiles
+    ${CMAKE_CURRENT_SOURCE_DIR}/private/Graphic/GraphicSubsystem.cpp
 )
 
 find_package(OpenGL)
@@ -24,8 +25,10 @@ if(OPENGL_FOUND)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    list(APPEND SourceFiles
+    list(APPEND PublicFiles
         ${CMAKE_CURRENT_SOURCE_DIR}/public/Graphic/GraphicSubsystemDXGI.h
+    )
+    list(APPEND SourceFiles
         ${CMAKE_CURRENT_SOURCE_DIR}/private/Graphic/GraphicSubsystemDXGI.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/private/Graphic/GraphicSubsystemDX9.h
         ${CMAKE_CURRENT_SOURCE_DIR}/private/Graphic/GraphicSubsystemDX9.cpp
@@ -42,8 +45,10 @@ function(add_lib TARGET_NAME)
     set_target_properties(${TARGET_NAME} PROPERTIES C_STANDARD 23)
     set_target_properties(${TARGET_NAME} PROPERTIES FOLDER "overlay")
 
-    set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB:LIBCMT.LIB /NODEFAULTLIB:msvcrt")
-    set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB:LIBCMTD.LIB /NODEFAULTLIB:msvcrtd")
+    if(WIN32)
+        set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_DEBUG "/NODEFAULTLIB:LIBCMT.LIB /NODEFAULTLIB:msvcrt")
+        set_target_properties(${TARGET_NAME} PROPERTIES LINK_FLAGS_RELEASE "/NODEFAULTLIB:LIBCMTD.LIB /NODEFAULTLIB:msvcrtd")
+    endif()
 
     set_target_properties(${TARGET_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
     target_compile_features(${TARGET_NAME} PRIVATE cxx_std_23)
@@ -66,36 +71,39 @@ function(add_lib TARGET_NAME)
 
     target_link_libraries(${TARGET_NAME} PRIVATE simple_utilpp_a)
     target_link_libraries(${TARGET_NAME} PRIVATE simple_logger_a)
-    target_include_directories(${TARGET_NAME}
-        PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/public>
-        $<INSTALL_INTERFACE:include/${TARGET_NAME}>
-    )
 
     target_include_directories(${TARGET_NAME}
-        PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/private>
+        PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private
+    )
+    target_sources(${TARGET_NAME}
+        PRIVATE
+        ${SourceFiles}
     )
 
-    install(TARGETS ${TARGET_NAME}
-        EXPORT ${TARGET_NAME}Targets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        PUBLIC_HEADER DESTINATION include
-    )
+    foreach(PublicFile ${PublicFiles})
+        cmake_path(RELATIVE_PATH PublicFile
+            BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/public
+            OUTPUT_VARIABLE PublicFileRelativePath)
+        cmake_path(APPEND TARGET_NAME CMAKE_INSTALL_INCLUDEDIR InterfaceIncludeFileRelativeDir OUTPUT_VARIABLE InterfaceIncludeFileInstallDir])
+        target_sources(${TARGET_NAME}
+            PUBLIC
+            FILE_SET HEADERS
+            BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/public
+            FILES
+            $<BUILD_INTERFACE:${PublicFile}>
+            $<INSTALL_INTERFACE:${InterfaceIncludeFileInstallDir}>
+        )
+    endforeach(PublicFile ${PublicFiles})
 
-    install(EXPORT ${TARGET_NAME}Targets
-        FILE ${TARGET_NAME}Targets.cmake
-        NAMESPACE UTILPP::
-        DESTINATION lib/cmake/${TARGET_NAME}
-    )
+    AddTargetInstall(${TARGET_NAME} UTILPP)
 endfunction()
 
 set(TARGET_NAME graphic_subsystem)
-add_library(${TARGET_NAME} SHARED ${SourceFiles})
+add_library(${TARGET_NAME} SHARED)
 add_lib(${TARGET_NAME})
 target_compile_definitions(${TARGET_NAME} PRIVATE -DGRAPHIC_SUBSYSTEM_EXPORTS)
 
 set(TARGET_NAME graphic_subsystem_a)
-add_library(${TARGET_NAME} STATIC ${SourceFiles})
+add_library(${TARGET_NAME} STATIC)
 add_lib(${TARGET_NAME})
 target_compile_definitions(${TARGET_NAME} PUBLIC -DGRAPHIC_SUBSYSTEM_NODLL)
