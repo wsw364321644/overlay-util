@@ -1,6 +1,13 @@
 #include "RPC/JrpcHookHelper.h"
+#include "JrpcHookHelperInternal.h"
 
+#include <RPC/message_common.h>
 #include <jrpc_parser.h>
+#include <simdjson.h>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+
 #include <memory>
 #include <stdint.h>
 #include <shared_mutex>
@@ -8,22 +15,26 @@
 #include <string>
 #include <chrono>
 #include <list>
-#include <RPC/message_common.h>
+
 
 DEFINE_RPC_OVERRIDE_FUNCTION(JRPCHookHelperAPI, "HookHelper");
 DEFINE_JRPC_OVERRIDE_FUNCTION(JRPCHookHelperAPI);
 
 REGISTER_RPC_API_AUTO(JRPCHookHelperAPI, ConnectToHost);
 DEFINE_REQUEST_RPC(JRPCHookHelperAPI, ConnectToHost);
-RPCHandle_t JRPCHookHelperAPI::ConnectToHost(uint64_t processId, const char* commandline, TConnectToHostDelegate inDelegate, TRPCErrorDelegate errDelegate)
+RPCHandle_t JRPCHookHelperAPI::ConnectToHost(uint64_t processId, std::string_view commandline, TConnectToHostDelegate inDelegate, TRPCErrorDelegate errDelegate)
 {
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(ConnectToHostName);
 
-    nlohmann::json obj = nlohmann::json::object();
-    obj["processId"] = processId;
-    obj["commandline"] = commandline;
-    req->SetParams(obj.dump());
+    rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    auto& a = doc.GetAllocator();
+    doc.AddMember("processId", processId, a);
+    doc.AddMember("commandline", rapidjson::Value(commandline.data(), commandline.size(), a), a);
+    if (!doc.Accept(writer)) {
+        return NullHandle;
+    }
 
     auto handle = processer->SendRequest(req);
     if (handle.IsValid()) {
@@ -37,17 +48,35 @@ bool JRPCHookHelperAPI::RespondConnectToHost(RPCHandle_t handle)
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
     response->SetError(false);
 
-    nlohmann::json doc = nlohmann::json();
-    response->SetResult(doc.dump());
+    rapidjson::Writer<FCharBuffer> writer(response->GetResultBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    if (!doc.Accept(writer)) {
+        return false;
+    }
+
     return processer->SendResponse(handle, response);
 }
 
 void JRPCHookHelperAPI::OnConnectToHostRequestRecv(std::shared_ptr<RPCRequest> req)
 {
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
-    auto doc = GetParamsNlohmannJson(*jreq);
+    auto& buf = jreq->GetParamsBuf();
+    buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    auto processId = doc["processId"].get_uint64();
+    if (processId.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+    auto commandline = doc["commandline"].get_string();
+    if (commandline.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
 
-    RecvConnectToHostDelegate(RPCHandle_t(req->GetID()), doc["processId"].get_ref<nlohmann::json::number_integer_t&>(), doc["commandline"].get_ref<nlohmann::json::string_t&>().c_str());
+    RecvConnectToHostDelegate(
+        RPCHandle_t(req->GetID()), 
+        processId.value_unsafe(), 
+        commandline.value_unsafe()
+    );
 }
 
 void JRPCHookHelperAPI::OnConnectToHostResponseRecv(std::shared_ptr<RPCResponse>resp, std::shared_ptr<RPCRequest>req)
@@ -69,15 +98,19 @@ void JRPCHookHelperAPI::OnConnectToHostResponseRecv(std::shared_ptr<RPCResponse>
 
 REGISTER_RPC_API_AUTO(JRPCHookHelperAPI, AddWindow);
 DEFINE_REQUEST_RPC(JRPCHookHelperAPI, AddWindow);
-RPCHandle_t JRPCHookHelperAPI::AddWindow(uint64_t windowID, const char* sharedMemName, TAddWindowDelegate inDelegate, TRPCErrorDelegate errDelegate)
+RPCHandle_t JRPCHookHelperAPI::AddWindow(uint64_t windowID, std::string_view sharedMemName, TAddWindowDelegate inDelegate, TRPCErrorDelegate errDelegate)
 {
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(AddWindowName);
 
-    nlohmann::json obj = nlohmann::json::object();
-    obj["windowID"] = windowID;
-    obj["sharedMemName"] = sharedMemName;
-    req->SetParams(obj.dump());
+    rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    auto& a = doc.GetAllocator();
+    doc.AddMember("windowID", windowID, a);
+    doc.AddMember("sharedMemName", rapidjson::Value(sharedMemName.data(), sharedMemName.size(), a), a);
+    if (!doc.Accept(writer)) {
+        return NullHandle;
+    }
 
     auto handle = processer->SendRequest(req);
     if (handle.IsValid()) {
@@ -91,17 +124,35 @@ bool JRPCHookHelperAPI::RespondAddWindow(RPCHandle_t handle)
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
     response->SetError(false);
 
-    nlohmann::json doc = nlohmann::json();
-    response->SetResult(doc.dump());
+    rapidjson::Writer<FCharBuffer> writer(response->GetResultBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    if (!doc.Accept(writer)) {
+        return false;
+    }
+
     return processer->SendResponse(handle, response);
 }
 
 void JRPCHookHelperAPI::OnAddWindowRequestRecv(std::shared_ptr<RPCRequest> req)
 {
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
-    auto doc = GetParamsNlohmannJson(*jreq);
+    auto& buf = jreq->GetParamsBuf();
+    buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    auto windowID = doc["windowID"].get_uint64();
+    if (windowID.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+    auto sharedMemName = doc["sharedMemName"].get_string();
+    if (sharedMemName.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
     if (RecvAddWindowDelegate)
-        RecvAddWindowDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>(), doc["sharedMemName"].get_ref<nlohmann::json::string_t&>().c_str());
+        RecvAddWindowDelegate(
+            RPCHandle_t(req->GetID()),
+            windowID.value_unsafe(),
+            sharedMemName.value_unsafe()
+        );
 }
 
 void JRPCHookHelperAPI::OnAddWindowResponseRecv(std::shared_ptr<RPCResponse>resp, std::shared_ptr<RPCRequest>req)
@@ -130,9 +181,13 @@ RPCHandle_t JRPCHookHelperAPI::RemoveWindow(uint64_t windowID,TRemoveWindowDeleg
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(RemoveWindowName);
 
-    nlohmann::json obj = nlohmann::json::object();
-    obj["windowID"] = windowID;
-    req->SetParams(obj.dump());
+    rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    auto& a = doc.GetAllocator();
+    doc.AddMember("windowID", windowID, a);
+    if (!doc.Accept(writer)) {
+        return NullHandle;
+    }
 
     auto handle = processer->SendRequest(req);
     if (handle.IsValid()) {
@@ -146,17 +201,28 @@ bool JRPCHookHelperAPI::RespondRemoveWindow(RPCHandle_t handle)
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
     response->SetError(false);
 
-    nlohmann::json doc = nlohmann::json();
-    response->SetResult(doc.dump());
+    rapidjson::Writer<FCharBuffer> writer(response->GetResultBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    if (!doc.Accept(writer)) {
+        return false;
+    }
+
     return processer->SendResponse(handle, response);
 }
 
 void JRPCHookHelperAPI::OnRemoveWindowRequestRecv(std::shared_ptr<RPCRequest> req)
 {
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
-    auto doc = GetParamsNlohmannJson(*jreq);
-    if(RecvRemoveWindowDelegate)
-        RecvRemoveWindowDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>());
+    auto& buf = jreq->GetParamsBuf();
+    buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    auto windowID = doc["windowID"].get_uint64();
+    if (windowID.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+    if (RecvRemoveWindowDelegate) {
+        RecvRemoveWindowDelegate(RPCHandle_t(req->GetID()), windowID.value_unsafe());
+    }
 }
 
 void JRPCHookHelperAPI::OnRemoveWindowResponseRecv(std::shared_ptr<RPCResponse>resp, std::shared_ptr<RPCRequest>req)
@@ -184,9 +250,13 @@ RPCHandle_t JRPCHookHelperAPI::UpdateWindowTexture(uint64_t windowID, TUpdateWin
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(UpdateWindowTextureName);
 
-    nlohmann::json obj = nlohmann::json::object();
-    obj["windowID"] = windowID;
-    req->SetParams(obj.dump());
+    rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    auto& a = doc.GetAllocator();
+    doc.AddMember("windowID", windowID, a);
+    if (!doc.Accept(writer)) {
+        return NullHandle;
+    }
 
     auto handle = processer->SendRequest(req);
     if (handle.IsValid()) {
@@ -200,17 +270,28 @@ bool JRPCHookHelperAPI::RespondUpdateWindowTexture(RPCHandle_t handle)
     std::shared_ptr<JsonRPCResponse> response = std::make_shared< JsonRPCResponse>();
     response->SetError(false);
 
-    nlohmann::json doc = nlohmann::json();
-    response->SetResult(doc.dump());
+    rapidjson::Writer<FCharBuffer> writer(response->GetResultBuf());
+    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    if (!doc.Accept(writer)) {
+        return false;
+    }
+
     return processer->SendResponse(handle, response);
 }
 
 void JRPCHookHelperAPI::OnUpdateWindowTextureRequestRecv(std::shared_ptr<RPCRequest> req)
 {
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
-    auto doc = GetParamsNlohmannJson(*jreq);
-    if (RecvUpdateWindowTextureDelegate)
-        RecvUpdateWindowTextureDelegate(RPCHandle_t(req->GetID()), doc["windowID"].get_ref<nlohmann::json::number_integer_t&>());
+    auto& buf = jreq->GetParamsBuf();
+    buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    auto windowID = doc["windowID"].get_uint64();
+    if (windowID.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+    if (RecvUpdateWindowTextureDelegate) {
+        RecvUpdateWindowTextureDelegate(RPCHandle_t(req->GetID()), windowID.value_unsafe());
+    }
 }
 
 void JRPCHookHelperAPI::OnUpdateWindowTextureResponseRecv(std::shared_ptr<RPCResponse>resp, std::shared_ptr<RPCRequest>req)

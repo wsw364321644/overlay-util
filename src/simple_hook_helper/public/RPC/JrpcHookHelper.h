@@ -11,9 +11,9 @@ public:
     DECLARE_RPC_OVERRIDE_FUNCTION(JRPCHookHelperAPI);
 
     DECLARE_RESPONSE_RPC(ConnectToHost);
-    DECLARE_REQUEST_RPC_TWO_PARAM(ConnectToHost, uint64_t, const char*);
+    DECLARE_REQUEST_RPC_TWO_PARAM(ConnectToHost, uint64_t, std::string_view);
     DECLARE_RESPONSE_RPC(AddWindow);
-    DECLARE_REQUEST_RPC_TWO_PARAM(AddWindow, uint64_t, const char*);
+    DECLARE_REQUEST_RPC_TWO_PARAM(AddWindow, uint64_t, std::string_view);
     DECLARE_RESPONSE_RPC(RemoveWindow);
     DECLARE_REQUEST_RPC_ONE_PARAM(RemoveWindow, uint64_t);
     DECLARE_RESPONSE_RPC(UpdateWindowTexture);
