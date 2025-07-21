@@ -66,7 +66,7 @@ void JRPCHookHelperEventAPI::OnHotkeyListUpdateRequestRecv(std::shared_ptr<RPCRe
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
 
     auto fn = [&](this auto&& self,simdjson::ondemand::array& list, HotKeyList_t& HotKeyList)->bool {
         auto res=list.begin();
@@ -145,7 +145,7 @@ void JRPCHookHelperEventAPI::OnInputStateUpdateRequestRecv(std::shared_ptr<RPCRe
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto want_visible = doc["want_visible"].get_bool();
     if (want_visible.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -197,7 +197,7 @@ void JRPCHookHelperEventAPI::OnClientSizeUpdateRequestRecv(std::shared_ptr<RPCRe
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto width = doc["width"].get_uint64();
     if (width.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -246,7 +246,7 @@ void JRPCHookHelperEventAPI::OnOverlayMouseWheelEventRequestRecv(std::shared_ptr
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto event = doc["event"].get_string();
     if (event.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -298,7 +298,7 @@ void JRPCHookHelperEventAPI::OnOverlayMouseButtonEventRequestRecv(std::shared_pt
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto event = doc["event"].get_string();
     if (event.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -348,7 +348,7 @@ void JRPCHookHelperEventAPI::OnOverlayMouseMotionEventRequestRecv(std::shared_pt
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto event = doc["event"].get_string();
     if (event.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -399,7 +399,7 @@ void JRPCHookHelperEventAPI::OnOverlayKeyboardEventRequestRecv(std::shared_ptr<R
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto event = doc["event"].get_string();
     if (event.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -444,7 +444,7 @@ void JRPCHookHelperEventAPI::OnOverlayCharEventRequestRecv(std::shared_ptr<RPCRe
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto str = doc["str"].get_string();
     if (str.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -493,7 +493,7 @@ void JRPCHookHelperEventAPI::OnOverlayWindowEventRequestRecv(std::shared_ptr<RPC
     }
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto event = doc["event"].get_string();
     if (event.error() != simdjson::error_code::SUCCESS) {
         return;

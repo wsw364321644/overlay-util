@@ -62,7 +62,7 @@ void JRPCHookHelperAPI::OnConnectToHostRequestRecv(std::shared_ptr<RPCRequest> r
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto processId = doc["processId"].get_uint64();
     if (processId.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -138,7 +138,7 @@ void JRPCHookHelperAPI::OnAddWindowRequestRecv(std::shared_ptr<RPCRequest> req)
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto windowID = doc["windowID"].get_uint64();
     if (windowID.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -215,7 +215,7 @@ void JRPCHookHelperAPI::OnRemoveWindowRequestRecv(std::shared_ptr<RPCRequest> re
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto windowID = doc["windowID"].get_uint64();
     if (windowID.error() != simdjson::error_code::SUCCESS) {
         return;
@@ -284,7 +284,7 @@ void JRPCHookHelperAPI::OnUpdateWindowTextureRequestRecv(std::shared_ptr<RPCRequ
     std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
-    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Size());
+    simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto windowID = doc["windowID"].get_uint64();
     if (windowID.error() != simdjson::error_code::SUCCESS) {
         return;
