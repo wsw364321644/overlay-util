@@ -29,7 +29,7 @@ endif()
 
 FetchContent_Declare(
   OCmakeUtil
-  GIT_REPOSITORY git@ssh.github.com:wsw364321644/OCmakeUtil.git
+  GIT_REPOSITORY https://github.com/wsw364321644/OCmakeUtil.git
   GIT_TAG ${OCmakeUtil_TAG}
   GIT_SUBMODULES_RECURSE true
 )
@@ -43,7 +43,7 @@ ImportTarget(RapidJSON SSH TAG origin/master)
 
 FetchContent_Declare(
   utilpp
-  GIT_REPOSITORY git@ssh.github.com:wsw364321644/utilpp.git
+  GIT_REPOSITORY https://github.com/wsw364321644/utilpp.git
   GIT_TAG ${UTILPP_TAG}
 )
 FetchContent_MakeAvailable(utilpp)
