@@ -36,7 +36,7 @@ RPCHandle_t JRPCHookHelperAPI::ConnectToHost(uint64_t processId, std::string_vie
         return NullHandle;
     }
 
-    auto handle = processer->SendRequest(req);
+    auto handle = SendRPCRequest(req);
     if (handle.IsValid()) {
         AddConnectToHostSendDelagate(req->GetID(), inDelegate, errDelegate);
     }
@@ -112,7 +112,7 @@ RPCHandle_t JRPCHookHelperAPI::AddWindow(uint64_t windowID, std::string_view sha
         return NullHandle;
     }
 
-    auto handle = processer->SendRequest(req);
+    auto handle = SendRPCRequest(req);
     if (handle.IsValid()) {
         AddAddWindowSendDelagate(req->GetID(), inDelegate, errDelegate);
     }
@@ -189,7 +189,7 @@ RPCHandle_t JRPCHookHelperAPI::RemoveWindow(uint64_t windowID,TRemoveWindowDeleg
         return NullHandle;
     }
 
-    auto handle = processer->SendRequest(req);
+    auto handle = SendRPCRequest(req);
     if (handle.IsValid()) {
         AddRemoveWindowSendDelagate(req->GetID(), inDelegate, errDelegate);
     }
@@ -258,7 +258,7 @@ RPCHandle_t JRPCHookHelperAPI::UpdateWindowTexture(uint64_t windowID, TUpdateWin
         return NullHandle;
     }
 
-    auto handle = processer->SendRequest(req);
+    auto handle = SendRPCRequest(req);
     if (handle.IsValid()) {
         AddUpdateWindowTextureSendDelagate(req->GetID(), inDelegate, errDelegate);
     }
