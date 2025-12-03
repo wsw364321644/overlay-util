@@ -54,7 +54,7 @@ bool JRPCHookHelperEventAPI::HotkeyListUpdate(HotKeyList_t& HotKeyListNode)
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnHotkeyListUpdateRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -134,7 +134,7 @@ bool JRPCHookHelperEventAPI::InputStateUpdate(overlay_ime_event_t& imeEvent)
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnInputStateUpdateRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -186,7 +186,7 @@ bool JRPCHookHelperEventAPI::ClientSizeUpdate(window_resize_event_t& size)
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnClientSizeUpdateRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -235,7 +235,7 @@ bool JRPCHookHelperEventAPI::OverlayMouseWheelEvent(uint64_t windowId, mouse_whe
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayMouseWheelEventRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -287,7 +287,7 @@ bool JRPCHookHelperEventAPI::OverlayMouseButtonEvent(uint64_t windowId, mouse_bu
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayMouseButtonEventRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -337,7 +337,7 @@ bool JRPCHookHelperEventAPI::OverlayMouseMotionEvent(uint64_t windowId, mouse_mo
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayMouseMotionEventRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -388,7 +388,7 @@ bool JRPCHookHelperEventAPI::OverlayKeyboardEvent(uint64_t windowId, keyboard_ev
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayKeyboardEventRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -433,7 +433,7 @@ bool JRPCHookHelperEventAPI::OverlayCharEvent(uint64_t windowId, overlay_char_ev
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayCharEventRequestRecv(std::shared_ptr<RPCRequest> req)
@@ -482,7 +482,7 @@ bool JRPCHookHelperEventAPI::OverlayWindowEvent(uint64_t windowId, window_event_
         return false;
     }
 
-    return  processer->SendEvent(req);
+    return processer->SendEvent(this,req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayWindowEventRequestRecv(std::shared_ptr<RPCRequest> req)
