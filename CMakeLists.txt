@@ -7,8 +7,8 @@ set(MY_PRODUCT_VERSION 0)
 set(MY_BUILD_NUMBER 0)
 set(VERSION "${MY_PRODUCT_NUMBER}.${MY_PRODUCT_VERSION}.${MY_BUILD_NUMBER}")
 
-set(UTILPP_TAG 0f3956bc8cc160d0d2474e17d56a153149c4ee62)
-set(OCmakeUtil_TAG 14dd3b2f2d7a5848d807466f1ee1e31e199fdfca)
+set(OCmakeUtil_TAG 799e0077a0a73875af6798aa6d8c79d5abb020ac)
+set(UTILPP_TAG 637d10dc604f268494f1ffdff14828b1afa4e296)
 
 project(overlay-util VERSION ${VERSION})
 enable_language(CXX ASM)
@@ -29,19 +29,20 @@ endif()
 
 FetchContent_Declare(
   OCmakeUtil
-  GIT_REPOSITORY git@ssh.github.com:wsw364321644/OCmakeUtil.git
+  GIT_REPOSITORY https://github.com/wsw364321644/OCmakeUtil.git
   GIT_TAG ${OCmakeUtil_TAG}
   GIT_SUBMODULES_RECURSE true
 )
 FetchContent_MakeAvailable(OCmakeUtil)
 
-ImportProject(LIBUV STATIC_CRT SSH FIND TAG be6b81a352d17513c95be153afcb3148f1a451cd) # 1.47.0
-ImportProject(SDL2 STATIC_CRT SSH FIND TAG f461d91cd265d7b9a44b4d472b1df0c0ad2855a0) # 2.30.2
-ImportProject(MbedTLS STATIC STATIC_CRT SSH FIND TAG 2ca6c285a0dd3f33982dd57299012dacab1ff206) # 3.6.0
+ImportProject(simdjson ${STATIC_CRT} ${SSH} TAG v4.2.4)
+ImportProject(libuv STATIC_CRT SSH TAG v1.51.0)
+ImportProject(SDL2 STATIC_CRT SSH FIND TAG release-2.32.10)
+ImportProject(MbedTLS STATIC STATIC_CRT SSH FIND TAG mbedtls-3.6.5)
 
 FetchContent_Declare(
   utilpp
-  GIT_REPOSITORY git@ssh.github.com:wsw364321644/utilpp.git
+  GIT_REPOSITORY https://github.com/wsw364321644/utilpp.git
   GIT_TAG ${UTILPP_TAG}
 )
 FetchContent_MakeAvailable(utilpp)

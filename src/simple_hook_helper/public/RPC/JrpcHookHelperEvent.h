@@ -11,8 +11,7 @@
 #include "std_ext.h"
 #include <any>
 #include <set>
-#pragma warning(push)
-#pragma warning(disable:4251)
+
 
 struct HotKeyNode_t;
 
@@ -37,11 +36,13 @@ namespace std
             return c.HotKey.key_code;
         }
     };
+
 }
 
    //std::any is std::string or HotKeyListNode_t
 
-
+#pragma warning(push)
+#pragma warning(disable:4251)
 class HOOK_HELPER_EXPORT JRPCHookHelperEventAPI :public IGroupJRPC, public IRPCHookHelperEventAPI
 {
 public:

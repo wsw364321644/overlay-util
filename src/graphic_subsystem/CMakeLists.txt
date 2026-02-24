@@ -75,19 +75,7 @@ function(add_lib TARGET_NAME)
         PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/private>
     )
 
-    install(TARGETS ${TARGET_NAME}
-        EXPORT ${TARGET_NAME}Targets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        PUBLIC_HEADER DESTINATION include
-    )
-
-    install(EXPORT ${TARGET_NAME}Targets
-        FILE ${TARGET_NAME}Targets.cmake
-        NAMESPACE UTILPP::
-        DESTINATION lib/cmake/${TARGET_NAME}
-    )
+    AddTargetInstall(${TARGET_NAME} UTILPP)
 endfunction()
 
 set(TARGET_NAME graphic_subsystem)
