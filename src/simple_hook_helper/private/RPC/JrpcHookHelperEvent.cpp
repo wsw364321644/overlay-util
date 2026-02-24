@@ -1,10 +1,9 @@
 #include "RPC/JrpcHookHelperEvent.h"
-#include "RPC/JrpcHookHelperInternal.h"
-
-#include <crypto_lib_base64.h>
 #include <RPC/message_common.h>
 #include <jrpc_parser.h>
-#include <simdjson.h>
+#include <crypto_lib_base64.h>
+
+#include <jrpc_parser.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -29,90 +28,84 @@ bool JRPCHookHelperEventAPI::HotkeyListUpdate(HotKeyList_t& HotKeyListNode)
     req->SetMethod (HotkeyListUpdateName);
 
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kArrayType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kArrayType);
     auto& a = doc.GetAllocator();
-    auto fn = [&](this auto&& self,DocumentType& list,const HotKeyList_t& HotKeyListNode)->void {
+
+    auto fn = [&](this auto& self, rapidjson::Value& list,const HotKeyList_t& HotKeyListNode)->void {
         for (auto& node : HotKeyListNode) {
-            DocumentType obj(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
-            obj.AddMember("mod", node.HotKey.mod, a);
+            rapidjson::Value obj(rapidjson::kObjectType);
             obj.AddMember("keyCode", node.HotKey.key_code, a);
+            obj.AddMember("mod", node.HotKey.mod, a);
             if (std::holds_alternative<std::string>(node.Child)) {
                 auto& str = std::get<std::string>(node.Child);
-                obj.AddMember("name", rapidjson::GenericStringRef(str.c_str(), str.size()), a);
+                obj.AddMember("name", rapidjson::Value(str.data(), str.size(), a), a);
             }
             else {
                 auto& children = std::get<HotKeyList_t>(node.Child);
-                DocumentType childrenNode(rapidjson::kArrayType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+                rapidjson::Value childrenNode(rapidjson::kArrayType);
                 self(childrenNode, children);
                 obj.AddMember("children", childrenNode, a);
             }
-            list.PushBack(obj, a);
+            list.PushBack(obj,a);
         }
         };
     fn(doc,HotKeyListNode);
+
     if (!doc.Accept(writer)) {
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return  processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnHotkeyListUpdateRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
-    HotKeyList_t HotKeyList;
     if (!RecvHotkeyListUpdateDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
 
-    auto fn = [&](this auto&& self,simdjson::ondemand::array& list, HotKeyList_t& HotKeyList)->bool {
-        auto res=list.begin();
-        if(res.error() != simdjson::error_code::SUCCESS) {
-            return false;
-        }
-        for (auto it = res.value_unsafe(); it != list.end(); it.operator++()) {
-            auto hotkeyNode = *it;
-            key_with_modifier_t key;
-            if(hotkeyNode.error() != simdjson::error_code::SUCCESS) {
-                return false;
+    HotKeyList_t HotKeyList;
+    auto list=doc.get_array();
+    if (list.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+    auto fn = [&](this auto& self, simdjson::ondemand::array& list, HotKeyList_t& HotKeyList)->void {
+        for (auto it = list.begin(); it != list.end(); ++it) {
+            auto hotkeyNode = (*it).get_object();
+            if (hotkeyNode.error() != simdjson::error_code::SUCCESS) {
+                return;
             }
             auto keyCode=hotkeyNode["keyCode"].get_int64();
             if (keyCode.error() != simdjson::error_code::SUCCESS) {
-                return false;
+                return;
             }
-            key.key_code = keyCode.value_unsafe();
-            auto mod=hotkeyNode["mod"].get_uint64();
+            auto mod = hotkeyNode["mod"].get_uint64();
             if (mod.error() != simdjson::error_code::SUCCESS) {
-                return false;
+                return;
             }
-            key.mod = mod.value_unsafe();
-            auto name=hotkeyNode["name"].get_string();
-            if (name.error() != simdjson::error_code::SUCCESS) {
-                auto children = hotkeyNode["children"].get_array();
-                if (children.error() != simdjson::error_code::SUCCESS) {
-                    return false;
+            key_with_modifier_t key{ .key_code = (SDL_Keycode)keyCode.value_unsafe(),
+                .mod = (Uint16)mod.value_unsafe()};
+            auto name = hotkeyNode["name"].get_string();
+            if (name.error() == simdjson::error_code::SUCCESS) {
+                HotKeyList.emplace(HotKeyNode_t{ std::move(key), std::string(name.value_unsafe()) });
+            }else{
+                HotKeyList_t children;
+                auto list = hotkeyNode["children"].get_array();
+                if (list.error() != simdjson::error_code::SUCCESS) {
+                    return;
                 }
-                HotKeyList_t childrenlist;
-                if (!self(children.value_unsafe(), childrenlist)) {
-                    return false;
-                }
-                HotKeyList.emplace(std::move(key), std::move(childrenlist));
-            }
-            else {
-                HotKeyList.emplace(std::move(key), std::string(name.value_unsafe()));
+                self(*list, children);
+                HotKeyList.emplace(HotKeyNode_t{ std::move(key), std::move(children) } );
             }
         }
         return true;
         };
-    auto arr = doc.get_array();
-    if(arr.error() != simdjson::error_code::SUCCESS) {
-        return;
-    }
-    fn(arr.value_unsafe(), HotKeyList);
-
+    fn(*list,HotKeyList);
     RecvHotkeyListUpdateDelegate(HotKeyList);
 }
 
@@ -122,9 +115,9 @@ bool JRPCHookHelperEventAPI::InputStateUpdate(overlay_ime_event_t& imeEvent)
 {
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(InputStateUpdateName);
-
+    
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("want_visible", imeEvent.want_visible, a);
     doc.AddMember("input_pos_x", imeEvent.input_pos_x, a);
@@ -134,20 +127,23 @@ bool JRPCHookHelperEventAPI::InputStateUpdate(overlay_ime_event_t& imeEvent)
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return  processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnInputStateUpdateRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvInputStateUpdateDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
-    auto want_visible = doc["want_visible"].get_bool();
-    if (want_visible.error() != simdjson::error_code::SUCCESS) {
+
+    overlay_ime_event_t imeEvent;
+    auto want_visible =doc["want_visible"].get_bool();
+    if(want_visible.error() != simdjson::error_code::SUCCESS) {
         return;
     }
     auto input_pos_x = doc["input_pos_x"].get_uint64();
@@ -158,11 +154,10 @@ void JRPCHookHelperEventAPI::OnInputStateUpdateRequestRecv(std::shared_ptr<RPCRe
     if (input_pos_y.error() != simdjson::error_code::SUCCESS) {
         return;
     }
-    auto input_line_height = doc["input_line_height"].get_uint64();
+    auto input_line_height = doc["input_line_height"].get_bool();
     if (input_line_height.error() != simdjson::error_code::SUCCESS) {
         return;
     }
-    overlay_ime_event_t imeEvent;
     imeEvent.input_line_height = input_line_height.value_unsafe();
     imeEvent.input_pos_x = input_pos_x.value_unsafe();
     imeEvent.input_pos_y = input_pos_y.value_unsafe();
@@ -178,7 +173,7 @@ bool JRPCHookHelperEventAPI::ClientSizeUpdate(window_resize_event_t& size)
     req->SetMethod(ClientSizeUpdateName);
 
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("width", size.width, a);
     doc.AddMember("height", size.height, a);
@@ -186,17 +181,18 @@ bool JRPCHookHelperEventAPI::ClientSizeUpdate(window_resize_event_t& size)
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnClientSizeUpdateRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvClientSizeUpdateDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
     auto width = doc["width"].get_uint64();
     if (width.error() != simdjson::error_code::SUCCESS) {
@@ -227,32 +223,33 @@ bool JRPCHookHelperEventAPI::OverlayMouseWheelEvent(uint64_t windowId, mouse_whe
     req->SetMethod(OverlayMouseWheelEventName);
 
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kArrayType);
     auto& a = doc.GetAllocator();
     doc.AddMember("windowId", windowId, a);
-    doc.AddMember("event", rapidjson::Value(base64buf, base64len,a), a);
+    doc.AddMember("event", rapidjson::Value(base64buf, base64len, a), a);
     if (!doc.Accept(writer)) {
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayMouseWheelEventRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvOverlayMouseWheelEventDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
-    auto event = doc["event"].get_string();
-    if (event.error() != simdjson::error_code::SUCCESS) {
-        return;
-    }
     auto windowId = doc["windowId"].get_uint64();
     if (windowId.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+    auto event = doc["event"].get_string();
+    if (event.error() != simdjson::error_code::SUCCESS) {
         return;
     }
 
@@ -277,9 +274,8 @@ bool JRPCHookHelperEventAPI::OverlayMouseButtonEvent(uint64_t windowId, mouse_bu
     }
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(OverlayMouseButtonEventName);
-
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("windowId", windowId, a);
     doc.AddMember("event", rapidjson::Value(base64buf, base64len, a), a);
@@ -287,26 +283,28 @@ bool JRPCHookHelperEventAPI::OverlayMouseButtonEvent(uint64_t windowId, mouse_bu
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayMouseButtonEventRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvOverlayMouseButtonEventDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
-    auto event = doc["event"].get_string();
-    if (event.error() != simdjson::error_code::SUCCESS) {
-        return;
-    }
     auto windowId = doc["windowId"].get_uint64();
     if (windowId.error() != simdjson::error_code::SUCCESS) {
         return;
     }
+    auto event = doc["event"].get_string();
+    if (event.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+
     mouse_button_event_t outEvent;
     size_t outlen = sizeof(mouse_wheel_event_t);
     if (!crypto_lib_base64_decode((uint8_t*)event.value_unsafe().data(), event.value_unsafe().size(), (uint8_t*)&outEvent, &outlen)) {
@@ -327,9 +325,8 @@ bool JRPCHookHelperEventAPI::OverlayMouseMotionEvent(uint64_t windowId, mouse_mo
     }
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod( OverlayMouseMotionEventName);
-
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("windowId", windowId, a);
     doc.AddMember("event", rapidjson::Value(base64buf, base64len, a), a);
@@ -337,26 +334,28 @@ bool JRPCHookHelperEventAPI::OverlayMouseMotionEvent(uint64_t windowId, mouse_mo
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayMouseMotionEventRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvOverlayMouseMotionEventDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
-    auto event = doc["event"].get_string();
-    if (event.error() != simdjson::error_code::SUCCESS) {
-        return;
-    }
     auto windowId = doc["windowId"].get_uint64();
     if (windowId.error() != simdjson::error_code::SUCCESS) {
         return;
     }
+    auto event = doc["event"].get_string();
+    if (event.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+
     mouse_motion_event_t outEvent;
     size_t outlen = sizeof(mouse_wheel_event_t);
     if (!crypto_lib_base64_decode((uint8_t*)event.value_unsafe().data(), event.value_unsafe().size(), (uint8_t*)&outEvent, &outlen)) {
@@ -378,9 +377,8 @@ bool JRPCHookHelperEventAPI::OverlayKeyboardEvent(uint64_t windowId, keyboard_ev
     }
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(OverlayKeyboardEventName);
-
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("windowId", windowId, a);
     doc.AddMember("event", rapidjson::Value(base64buf, base64len, a), a);
@@ -388,26 +386,28 @@ bool JRPCHookHelperEventAPI::OverlayKeyboardEvent(uint64_t windowId, keyboard_ev
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayKeyboardEventRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvOverlayKeyboardEventDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
-    auto event = doc["event"].get_string();
-    if (event.error() != simdjson::error_code::SUCCESS) {
-        return;
-    }
     auto windowId = doc["windowId"].get_uint64();
     if (windowId.error() != simdjson::error_code::SUCCESS) {
         return;
     }
+    auto event = doc["event"].get_string();
+    if (event.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+
     keyboard_event_t outEvent;
     size_t outlen = sizeof(mouse_wheel_event_t);
     if (!crypto_lib_base64_decode((uint8_t*)event.value_unsafe().data(), event.value_unsafe().size(), (uint8_t*)&outEvent, &outlen)) {
@@ -423,9 +423,8 @@ bool JRPCHookHelperEventAPI::OverlayCharEvent(uint64_t windowId, overlay_char_ev
 {
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(OverlayCharEventName);
-
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("windowId", windowId, a);
     doc.AddMember("str", rapidjson::Value(e.char_buf, e.num, a), a);
@@ -433,26 +432,28 @@ bool JRPCHookHelperEventAPI::OverlayCharEvent(uint64_t windowId, overlay_char_ev
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayCharEventRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvOverlayCharEventDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
-    auto str = doc["str"].get_string();
-    if (str.error() != simdjson::error_code::SUCCESS) {
-        return;
-    }
     auto windowId = doc["windowId"].get_uint64();
     if (windowId.error() != simdjson::error_code::SUCCESS) {
         return;
     }
+    auto str = doc["str"].get_string();
+    if (str.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+
     overlay_char_event_t outEvent;
     outEvent.char_buf = str.value_unsafe().data();
     outEvent.num = str.value_unsafe().size();
@@ -472,9 +473,8 @@ bool JRPCHookHelperEventAPI::OverlayWindowEvent(uint64_t windowId, window_event_
     }
     std::shared_ptr<JsonRPCRequest> req = std::make_shared< JsonRPCRequest>();
     req->SetMethod(OverlayWindowEventName);
-
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    DocumentType doc(rapidjson::kObjectType, &ThreadValueAllocator, sizeof(ParseBuffer), &ThreadParseAllocator);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("windowId", windowId, a);
     doc.AddMember("event", rapidjson::Value(base64buf, base64len, a), a);
@@ -482,26 +482,28 @@ bool JRPCHookHelperEventAPI::OverlayWindowEvent(uint64_t windowId, window_event_
         return false;
     }
 
-    return processer->SendEvent(this,req);
+    return processer->SendEvent(this, req);
 }
 
 void JRPCHookHelperEventAPI::OnOverlayWindowEventRequestRecv(std::shared_ptr<RPCRequest> req)
 {
-    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     if (!RecvOverlayWindowEventDelegate) {
         return;
     }
+    std::shared_ptr<JsonRPCRequest> jreq = std::dynamic_pointer_cast<JsonRPCRequest>(req);
     auto& buf = jreq->GetParamsBuf();
     buf.Reverse(buf.Length() + simdjson::SIMDJSON_PADDING);
+    simdjson::ondemand::parser SimdjsonParser;
     simdjson::ondemand::document doc = SimdjsonParser.iterate(buf.Data(), buf.Length(), buf.Capacity());
-    auto event = doc["event"].get_string();
-    if (event.error() != simdjson::error_code::SUCCESS) {
-        return;
-    }
     auto windowId = doc["windowId"].get_uint64();
     if (windowId.error() != simdjson::error_code::SUCCESS) {
         return;
     }
+    auto event = doc["event"].get_string();
+    if (event.error() != simdjson::error_code::SUCCESS) {
+        return;
+    }
+
     window_event_t outEvent;
     size_t outlen = sizeof(mouse_wheel_event_t);
     if (!crypto_lib_base64_decode((uint8_t*)event.value_unsafe().data(), event.value_unsafe().size(), (uint8_t*)&outEvent, &outlen)) {

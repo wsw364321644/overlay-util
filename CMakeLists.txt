@@ -7,8 +7,8 @@ set(MY_PRODUCT_VERSION 0)
 set(MY_BUILD_NUMBER 0)
 set(VERSION "${MY_PRODUCT_NUMBER}.${MY_PRODUCT_VERSION}.${MY_BUILD_NUMBER}")
 
-set(OCmakeUtil_TAG e3401a68d752cb9343b3c19183bced74bccaf586)
-set(UTILPP_TAG 8b875d3aaaab37409a3627f21136cb878bfb49fc)
+set(OCmakeUtil_TAG 799e0077a0a73875af6798aa6d8c79d5abb020ac)
+set(UTILPP_TAG 637d10dc604f268494f1ffdff14828b1afa4e296)
 
 project(overlay-util VERSION ${VERSION})
 enable_language(CXX ASM)
@@ -35,11 +35,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(OCmakeUtil)
 
-ImportProject(LIBUV STATIC_CRT SSH FIND TAG be6b81a352d17513c95be153afcb3148f1a451cd) # 1.47.0
-ImportProject(SDL2 STATIC_CRT SSH FIND TAG f461d91cd265d7b9a44b4d472b1df0c0ad2855a0) # 2.30.2
-ImportProject(MbedTLS STATIC STATIC_CRT SSH FIND TAG 2ca6c285a0dd3f33982dd57299012dacab1ff206) # 3.6.0
-ImportTarget(RapidJSON SSH TAG origin/master)
-#ImportProject(simdjson ${STATIC_CRT} ${SSH} TAG v3.13.0)
+ImportProject(simdjson ${STATIC_CRT} ${SSH} TAG v4.2.4)
+ImportProject(libuv STATIC_CRT SSH TAG v1.51.0)
+ImportProject(SDL2 STATIC_CRT SSH FIND TAG release-2.32.10)
+ImportProject(MbedTLS STATIC STATIC_CRT SSH FIND TAG mbedtls-3.6.5)
 
 FetchContent_Declare(
   utilpp
