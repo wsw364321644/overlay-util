@@ -35,7 +35,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(OCmakeUtil)
 
-ImportProject(simdjson ${STATIC_CRT} ${SSH} TAG v4.2.4)
+ImportProject(simdjson STATIC_CRT SSH TAG v4.2.4)
 ImportProject(libuv STATIC_CRT SSH TAG v1.51.0)
 ImportProject(SDL2 STATIC_CRT SSH FIND TAG release-2.32.10)
 ImportProject(MbedTLS STATIC STATIC_CRT SSH FIND TAG mbedtls-3.6.5)
