@@ -2,8 +2,9 @@
 #include <RPC/message_common.h>
 #include <jrpc_parser.h>
 #include <crypto_lib_base64.h>
-
 #include <jrpc_parser.h>
+
+#include <simdjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -103,7 +104,6 @@ void JRPCHookHelperEventAPI::OnHotkeyListUpdateRequestRecv(std::shared_ptr<RPCRe
                 HotKeyList.emplace(HotKeyNode_t{ std::move(key), std::move(children) } );
             }
         }
-        return true;
         };
     fn(*list,HotKeyList);
     RecvHotkeyListUpdateDelegate(HotKeyList);
@@ -223,7 +223,7 @@ bool JRPCHookHelperEventAPI::OverlayMouseWheelEvent(uint64_t windowId, mouse_whe
     req->SetMethod(OverlayMouseWheelEventName);
 
     rapidjson::Writer<FCharBuffer> writer(req->GetParamsBuf());
-    rapidjson::Document doc(rapidjson::kArrayType);
+    rapidjson::Document doc(rapidjson::kObjectType);
     auto& a = doc.GetAllocator();
     doc.AddMember("windowId", windowId, a);
     doc.AddMember("event", rapidjson::Value(base64buf, base64len, a), a);
