@@ -14,6 +14,14 @@ project(overlay-util VERSION ${VERSION})
 enable_language(CXX ASM)
 
 option(OVERLAY_STATIC_CRT "OVERLAY STATIC CRT Build ." OFF)
+option(OVERLAY_GIT_SSH "Git port 22." OFF)
+
+if(OVERLAY_GIT_SSH)
+  set(SSH SSH)
+else()
+  unset(SSH)
+endif()
+
 
 if(PROJECT_IS_TOP_LEVEL)
   if(OVERLAY_STATIC_CRT)
@@ -35,10 +43,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(OCmakeUtil)
 
-ImportProject(simdjson STATIC_CRT SSH TAG v4.2.4)
-ImportProject(libuv STATIC_CRT SSH TAG v1.51.0)
-ImportProject(SDL2 STATIC_CRT SSH FIND TAG release-2.32.10)
-ImportProject(MbedTLS STATIC STATIC_CRT SSH FIND TAG mbedtls-3.6.5)
+ImportProject(simdjson STATIC_CRT ${SSH} TAG v4.2.4)
+ImportProject(libuv STATIC_CRT ${SSH} TAG v1.51.0)
+ImportProject(SDL2 STATIC_CRT ${SSH} FIND TAG release-2.32.10)
+ImportProject(MbedTLS STATIC STATIC_CRT ${SSH} FIND TAG mbedtls-3.6.5)
 
 FetchContent_Declare(
   utilpp
