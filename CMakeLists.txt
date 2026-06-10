@@ -7,10 +7,10 @@ set(MY_PRODUCT_VERSION 0)
 set(MY_BUILD_NUMBER 0)
 set(VERSION "${MY_PRODUCT_NUMBER}.${MY_PRODUCT_VERSION}.${MY_BUILD_NUMBER}")
 
-set(OCmakeUtil_TAG 799e0077a0a73875af6798aa6d8c79d5abb020ac)
-set(UTILPP_TAG 637d10dc604f268494f1ffdff14828b1afa4e296)
+set(OCmakeUtil_TAG 9344823811211257ade55a23e010a3b09820dfa7)
+set(UTILPP_TAG 4f273909e85baee1170cd55d2057586d6186abb2)
 
-project(overlay-util VERSION ${VERSION})
+project(OverlayUtil VERSION ${VERSION})
 enable_language(CXX ASM)
 
 option(OVERLAY_STATIC_CRT "OVERLAY STATIC CRT Build ." OFF)
@@ -57,3 +57,5 @@ FetchContent_MakeAvailable(utilpp)
 
 add_subdirectory(src/simple_hook_helper)
 add_subdirectory(src/graphic_subsystem)
+
+ExportFromInstall(${PROJECT_NAME})

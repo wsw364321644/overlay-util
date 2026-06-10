@@ -69,8 +69,8 @@ function(add_lib TARGET_NAME)
         endif()
     endif()
 
-    target_link_libraries(${TARGET_NAME} PRIVATE simple_utilpp_a)
-    target_link_libraries(${TARGET_NAME} PRIVATE simple_logger_a)
+    target_link_libraries(${TARGET_NAME} PRIVATE UTILPP::simple_utilpp_a)
+    target_link_libraries(${TARGET_NAME} PRIVATE UTILPP::simple_logger_a)
 
     target_include_directories(${TARGET_NAME}
         PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/private
@@ -95,7 +95,8 @@ function(add_lib TARGET_NAME)
         )
     endforeach(PublicFile ${PublicFiles})
 
-    AddTargetInstall(${TARGET_NAME} UTILPP)
+    AddTargetInstall(${TARGET_NAME} ${PROJECT_NAME})
+    add_library(${PROJECT_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
 endfunction()
 
 set(TARGET_NAME graphic_subsystem)

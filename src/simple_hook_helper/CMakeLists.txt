@@ -11,7 +11,8 @@ function(add_simple_hook_helper TARGET_NAME)
     set_target_properties(${TARGET_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
     target_compile_features(${TARGET_NAME} PRIVATE cxx_std_23)
     AddTargetInclude(${TARGET_NAME})
-    AddTargetInstall(${TARGET_NAME} UTILPP)
+    AddTargetInstall(${TARGET_NAME} ${PROJECT_NAME})
+    add_library(${PROJECT_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
 endfunction()
 
 set(TARGET_NAME simple_hook_helper)
@@ -23,7 +24,6 @@ target_link_libraries(${TARGET_NAME} PRIVATE UTILPP::crypto_lib_helper)
 target_link_libraries(${TARGET_NAME} PRIVATE UTILPP::windows_util)
 target_link_libraries(${TARGET_NAME} PUBLIC SDL2::SDL2)
 target_link_libraries(${TARGET_NAME} PRIVATE simdjson::simdjson)
-
 
 set(TARGET_NAME simple_hook_helper_a)
 add_library(${TARGET_NAME} STATIC ${SourceFiles})
