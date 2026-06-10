@@ -22,17 +22,17 @@ else()
   unset(SSH)
 endif()
 
-
-if(PROJECT_IS_TOP_LEVEL)
-  if(OVERLAY_STATIC_CRT)
-    if(MSVC)
-      set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-      add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-    endif()
-
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
-    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
+if(OVERLAY_STATIC_CRT)
+  if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   endif()
+
+  set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /MT")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /MTd")
+  set(STATIC_CRT STATIC_CRT)
+else()
+  unset(STATIC_CRT)
 endif()
 
 FetchContent_Declare(

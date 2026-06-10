@@ -10,6 +10,8 @@ function(add_simple_hook_helper TARGET_NAME)
 
     set_target_properties(${TARGET_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
     target_compile_features(${TARGET_NAME} PRIVATE cxx_std_23)
+
+    target_link_libraries(${TARGET_NAME} PRIVATE RapidJSON::RapidJSON)
     AddTargetInclude(${TARGET_NAME})
     AddTargetInstall(${TARGET_NAME} ${PROJECT_NAME})
     add_library(${PROJECT_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
