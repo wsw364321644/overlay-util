@@ -13,8 +13,10 @@ function(add_simple_hook_helper TARGET_NAME)
 
     target_link_libraries(${TARGET_NAME} PRIVATE RapidJSON::RapidJSON)
     AddTargetInclude(${TARGET_NAME})
-    AddTargetInstall(${TARGET_NAME} ${PROJECT_NAME})
     add_library(${PROJECT_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
+    if(NOT OVERLAY_DISABLE_INSTALL)
+        AddTargetInstall(${TARGET_NAME} ${PROJECT_NAME})
+    endif()
 endfunction()
 
 set(TARGET_NAME simple_hook_helper)

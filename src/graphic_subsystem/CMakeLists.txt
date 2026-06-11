@@ -95,7 +95,10 @@ function(add_lib TARGET_NAME)
         )
     endforeach(PublicFile ${PublicFiles})
 
-    AddTargetInstall(${TARGET_NAME} ${PROJECT_NAME})
+    if(NOT OVERLAY_DISABLE_INSTALL)
+        AddTargetInstall(${TARGET_NAME} ${PROJECT_NAME})
+    endif()
+
     add_library(${PROJECT_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
 endfunction()
 

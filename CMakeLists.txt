@@ -15,6 +15,7 @@ enable_language(CXX ASM)
 
 option(OVERLAY_STATIC_CRT "OVERLAY STATIC CRT Build ." OFF)
 option(OVERLAY_GIT_SSH "Git port 22." OFF)
+option(OVERLAY_DISABLE_INSTALL "disable install." OFF)
 
 if(OVERLAY_GIT_SSH)
   set(SSH SSH)
@@ -58,4 +59,6 @@ FetchContent_MakeAvailable(utilpp)
 add_subdirectory(src/simple_hook_helper)
 add_subdirectory(src/graphic_subsystem)
 
-ExportFromInstall(${PROJECT_NAME})
+if(NOT OVERLAY_DISABLE_INSTALL)
+  ExportFromInstall(${PROJECT_NAME})
+endif()
